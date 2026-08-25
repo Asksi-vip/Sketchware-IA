@@ -42,16 +42,20 @@ android {
 
     signingConfigs {
         debug {
-            storeFile = file("../testkey.keystore")
-            storePassword = "testkey"
-            keyAlias = "testkey"
-            keyPassword = "testkey"
+            def defaultKs = file("sketchware-ia.keystore")
+            if (!defaultKs.exists()) {
+                defaultKs = file("../sketchware-ia.keystore")
+            }
+            storeFile = defaultKs
+            storePassword = "sketchware123"
+            keyAlias = "sketchware-ia"
+            keyPassword = "sketchware123"
         }
         release {
             def keystoreBase64 = System.getenv("KEYSTORE_BASE64")
-            def candidateKeystore = file("../sketchware-ia.keystore")
+            def candidateKeystore = file("sketchware-ia.keystore")
             if (!candidateKeystore.exists()) {
-                candidateKeystore = file("sketchware-ia.keystore")
+                candidateKeystore = file("../sketchware-ia.keystore")
             }
 
             if (keystoreBase64 != null && !keystoreBase64.isEmpty()) {
@@ -63,16 +67,11 @@ android {
                 storePassword = System.getenv("STORE_PASSWORD") ?: "sketchware123"
                 keyAlias     = System.getenv("KEY_ALIAS")      ?: "sketchware-ia"
                 keyPassword  = System.getenv("KEY_PASSWORD")   ?: "sketchware123"
-            } else if (candidateKeystore.exists()) {
+            } else {
                 storeFile = candidateKeystore
                 storePassword = System.getenv("STORE_PASSWORD") ?: "sketchware123"
                 keyAlias     = System.getenv("KEY_ALIAS")      ?: "sketchware-ia"
                 keyPassword  = System.getenv("KEY_PASSWORD")   ?: "sketchware123"
-            } else {
-                storeFile = signingConfigs.debug.storeFile
-                storePassword = signingConfigs.debug.storePassword
-                keyAlias = signingConfigs.debug.keyAlias
-                keyPassword = signingConfigs.debug.keyPassword
             }
         }
     }
@@ -226,4 +225,26 @@ tasks.register('createMockGoogleServices') {
     }
 }
 
-preBuild.dependsOn createMockGoogleServices
+tasks.register('createMockKeystore') {
+    doLast {
+        def ksFile = file("$projectDir/sketchware-ia.keystore")
+        if (!ksFile.exists()) {
+            ksFile.parentFile.mkdirs()
+            exec {
+                commandLine "keytool", "-genkeypair",
+                    "-alias", "sketchware-ia",
+                    "-keyalg", "RSA",
+                    "-keysize", "2048",
+                    "-validity", "10000",
+                    "-keystore", ksFile.absolutePath,
+                    "-storepass", "sketchware123",
+                    "-keypass", "sketchware123",
+                    "-dname", "CN=SketchwareIA, OU=Dev, O=Sketchware, L=City, ST=State, C=US"
+            }
+        }
+    }
+}
+
+tasks.matching { it.name.startsWith("validateSigning") || it.name.startsWith("preBuild") }.configureEach {
+    dependsOn 'createMockGoogleServices', 'createMockKeystore'
+}
