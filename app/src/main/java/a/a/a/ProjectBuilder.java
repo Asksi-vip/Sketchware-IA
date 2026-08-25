@@ -26,6 +26,8 @@ import com.github.megatronking.stringfog.plugin.StringFogMappingPrinter;
 import com.iyxan23.zipalignjava.InvalidZipException;
 import com.iyxan23.zipalignjava.ZipAlign;
 
+import java.util.Locale;
+
 import org.xml.sax.SAXException;
 
 import java.io.File;
