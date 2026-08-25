@@ -48,26 +48,32 @@ android {
             keyPassword = "testkey"
         }
         release {
-            // Support env vars for CI (GitHub Actions secrets), fall back to local keystore.
-            // To use in CI, set these GitHub Actions secrets:
-            //   KEYSTORE_BASE64   – base64-encoded sketchware-ia.keystore
-            //   KEY_ALIAS         – sketchware-ia
-            //   KEY_PASSWORD      – keystore key password
-            //   STORE_PASSWORD    – keystore store password
             def keystoreBase64 = System.getenv("KEYSTORE_BASE64")
+            def candidateKeystore = file("../sketchware-ia.keystore")
+            if (!candidateKeystore.exists()) {
+                candidateKeystore = file("sketchware-ia.keystore")
+            }
+
             if (keystoreBase64 != null && !keystoreBase64.isEmpty()) {
-                // Decode keystore from env var at build time
                 def keystoreBytes = java.util.Base64.decoder.decode(keystoreBase64)
                 def tmpKeystore = file("${buildDir}/signing/release.keystore")
                 tmpKeystore.parentFile.mkdirs()
                 tmpKeystore.bytes = keystoreBytes
                 storeFile = tmpKeystore
+                storePassword = System.getenv("STORE_PASSWORD") ?: "sketchware123"
+                keyAlias     = System.getenv("KEY_ALIAS")      ?: "sketchware-ia"
+                keyPassword  = System.getenv("KEY_PASSWORD")   ?: "sketchware123"
+            } else if (candidateKeystore.exists()) {
+                storeFile = candidateKeystore
+                storePassword = System.getenv("STORE_PASSWORD") ?: "sketchware123"
+                keyAlias     = System.getenv("KEY_ALIAS")      ?: "sketchware-ia"
+                keyPassword  = System.getenv("KEY_PASSWORD")   ?: "sketchware123"
             } else {
-                storeFile = file("../sketchware-ia.keystore")
+                storeFile = signingConfigs.debug.storeFile
+                storePassword = signingConfigs.debug.storePassword
+                keyAlias = signingConfigs.debug.keyAlias
+                keyPassword = signingConfigs.debug.keyPassword
             }
-            storePassword = System.getenv("STORE_PASSWORD") ?: "sketchware123"
-            keyAlias     = System.getenv("KEY_ALIAS")      ?: "sketchware-ia"
-            keyPassword  = System.getenv("KEY_PASSWORD")   ?: "sketchware123"
         }
     }
 
