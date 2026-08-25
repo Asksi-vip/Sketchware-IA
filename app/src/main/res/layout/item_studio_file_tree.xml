@@ -1,0 +1,122 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="44dp"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingTop="5dp"
+    android:paddingEnd="4dp"
+    android:paddingBottom="5dp">
+
+    <!--
+        Indentation spacer: width is set programmatically to (depth * 18dp).
+        Replaces the old approach of padding the entire root row, which caused
+        content to overflow the screen edge at deeper nesting levels.
+    -->
+    <View
+        android:id="@+id/tree_indent"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:visibility="visible" />
+
+    <!--
+        Vertical tree connector line — shown when depth > 0.
+        Fixed width so it never pushes content out.
+    -->
+    <View
+        android:id="@+id/tree_connector"
+        android:layout_width="1dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="6dp"
+        android:background="@color/studio_tree_line"
+        tools:visibility="visible" />
+
+    <!--
+        Chevron to expand/collapse directories.
+        Always occupies its space (INVISIBLE when not a directory) so
+        file items align with directory items at the same depth.
+    -->
+    <ImageView
+        android:id="@+id/file_chevron"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginEnd="3dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_mtrl_chevron_right_24"
+        android:tint="@color/studio_text_secondary" />
+
+    <ImageView
+        android:id="@+id/file_icon"
+        android:layout_width="19dp"
+        android:layout_height="19dp"
+        android:layout_marginEnd="7dp"
+        android:contentDescription="@null"
+        tools:src="@drawable/ic_file_default" />
+
+    <!-- Name + badge + meta — takes all remaining space; ellipsize prevents overflow -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/file_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/studio_text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="MainActivity.java" />
+
+            <TextView
+                android:id="@+id/file_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="18dp"
+                android:layout_marginStart="5dp"
+                android:background="@drawable/bg_studio_file_badge"
+                android:gravity="center"
+                android:minWidth="32dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:maxLines="1"
+                android:textColor="@color/studio_text_secondary"
+                android:textSize="9sp"
+                tools:text="JAVA" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/file_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:maxLines="1"
+            android:textColor="@color/studio_text_secondary"
+            android:textSize="11sp"
+            tools:text="app/src/main/java" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/file_actions"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="2dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/studio_action_file_menu"
+        android:padding="6dp"
+        android:src="@drawable/ic_mtrl_more_vertical"
+        android:tint="@color/studio_text_secondary" />
+
+</LinearLayout>

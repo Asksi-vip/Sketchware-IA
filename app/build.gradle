@@ -1,0 +1,217 @@
+def googleServicesJson = System.getenv("GOOGLE_SERVICES_JSON")
+def googleServicesJsonBase64 = System.getenv("GOOGLE_SERVICES_JSON_BASE64")
+def decodedBase64 = googleServicesJsonBase64 != null ? new String(java.util.Base64.decoder.decode(googleServicesJsonBase64), "UTF-8") : null
+def secrets = googleServicesJson != null ? googleServicesJson : decodedBase64
+def googleServicesFile = file("$projectDir/google-services.json")
+def analyticsEnabled = (secrets != null) || googleServicesFile.exists()
+
+apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
+apply plugin: "com.google.gms.google-services"
+apply plugin: "com.google.firebase.crashlytics"
+
+android {
+    compileSdk = 36
+
+    // Resolve the git hash defensively: the build must not fail when git is not
+    // installed or the project was downloaded as a ZIP (no .git directory).
+    def gitCommitHash = "unknown"
+    def shortCommitHash = "unknown"
+    try {
+        def proc = "git rev-parse HEAD".execute(null, projectDir)
+        proc.waitFor()
+        if (proc.exitValue() == 0) {
+            gitCommitHash = proc.text.trim()
+            shortCommitHash = gitCommitHash.take(7)
+        }
+    } catch (Exception ignored) {
+        // git unavailable — keep "unknown"
+    }
+
+    defaultConfig {
+        applicationId = "pro.sketchware"
+        namespace = "pro.sketchware"
+        //noinspection ExpiredTargetSdkVersion since we don't target getting Sketchware Pro on Google Play.
+        targetSdk = 28
+        minSdk = 26
+        versionCode = 150
+        versionName = "8.1 preview"
+
+        buildConfigField("String", "GIT_HASH", "\"${gitCommitHash}\"")
+    }
+
+    signingConfigs {
+        debug {
+            storeFile = file("../testkey.keystore")
+            storePassword = "testkey"
+            keyAlias = "testkey"
+            keyPassword = "testkey"
+        }
+        release {
+            // Support env vars for CI (GitHub Actions secrets), fall back to local keystore.
+            // To use in CI, set these GitHub Actions secrets:
+            //   KEYSTORE_BASE64   – base64-encoded sketchware-ia.keystore
+            //   KEY_ALIAS         – sketchware-ia
+            //   KEY_PASSWORD      – keystore key password
+            //   STORE_PASSWORD    – keystore store password
+            def keystoreBase64 = System.getenv("KEYSTORE_BASE64")
+            if (keystoreBase64 != null && !keystoreBase64.isEmpty()) {
+                // Decode keystore from env var at build time
+                def keystoreBytes = java.util.Base64.decoder.decode(keystoreBase64)
+                def tmpKeystore = file("${buildDir}/signing/release.keystore")
+                tmpKeystore.parentFile.mkdirs()
+                tmpKeystore.bytes = keystoreBytes
+                storeFile = tmpKeystore
+            } else {
+                storeFile = file("../sketchware-ia.keystore")
+            }
+            storePassword = System.getenv("STORE_PASSWORD") ?: "sketchware123"
+            keyAlias     = System.getenv("KEY_ALIAS")      ?: "sketchware-ia"
+            keyPassword  = System.getenv("KEY_PASSWORD")   ?: "sketchware123"
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig = signingConfigs.debug
+        }
+        release {
+            minifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.release
+        }
+    }
+
+    packaging {
+        resources.excludes += "license/*"
+        resources.excludes += "META-INF/DEPENDENCIES"
+        resources.pickFirsts += "api_database/*"
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    androidResources {
+        additionalParameters.addAll("--stable-ids", "${rootDir}/public-stable-ids.txt")
+    }
+
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
+
+    configurations.implementation {
+        exclude group: 'javax.inject', module: 'javax.inject'
+        exclude group: "org.jetbrains.kotlin", module: "kotlin-scripting-compiler-embeddable"
+        exclude group: "org.jetbrains.kotlin", module: "kotlin-scripting-common"
+        exclude group: "org.jetbrains.kotlin", module: "kotlin-scripting-jvm"
+        exclude group: "org.jetbrains.kotlin", module: "kotlin-script-runtime"
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar", "*.aar"])
+
+    implementation libs.bundles.ui
+
+    implementation libs.bundles.image
+
+    implementation platform(libs.sora.editor)
+    implementation libs.bundles.editor.and.lang
+
+    implementation libs.bundles.coil
+
+    implementation libs.bundles.bundletool
+    implementation(libs.sdklib) {
+        exclude group: "com.intellij", module: "annotations"
+    }
+
+    implementation libs.bundles.shrinker
+    implementation libs.zipalign.java
+
+    implementation libs.gson
+    implementation libs.scpkix.jdk15on
+
+    implementation libs.markwon
+
+    implementation libs.bundles.networking
+
+    implementation libs.ecj
+    implementation libs.stax.api
+
+    implementation libs.bundles.kotlin.compiler
+    compileOnly libs.kotlin.compiler
+
+    implementation libs.dependencyresolver
+    implementation libs.filepicker
+
+    implementation libs.libsu
+    implementation libs.insetter
+
+    implementation(libs.javaparser.symbol.solver) {
+        exclude group: "com.google.guava", module: "guava"
+    }
+
+    // Analytics and Crashlytics
+    if (secrets != null) {
+        googleServicesFile.text = secrets
+    }
+    implementation platform("com.google.firebase:firebase-bom:34.3.0")
+    implementation "com.google.firebase:firebase-crashlytics"
+    implementation "com.google.firebase:firebase-analytics"
+    implementation "com.google.firebase:firebase-messaging"
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs_nio:2.1.5"
+}
+
+tasks.register('createMockGoogleServices') {
+    doLast {
+        if (secrets != null) {
+            new File("$projectDir/google-services.json").text = secrets
+            return
+        }
+        def mockFile = file("src/debug/google-services.json")
+        if (!mockFile.exists()) {
+            mockFile.parentFile.mkdirs()
+            def mockContent = """{
+  "project_info": {
+    "project_number": "123456789000",
+    "firebase_url": "https://mock-project-default-rtdb.firebaseio.com",
+    "project_id": "mock-project",
+    "storage_bucket": "mock-project.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789000:android:mockappid123456",
+        "android_client_info": {
+          "package_name": "${android.defaultConfig.applicationId}"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "mock_AIzaSyBQJCUXVKUjD38-u5pWkqMtesIfFvxAcvs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}"""
+            mockFile.text = mockContent
+        }
+    }
+}
+
+preBuild.dependsOn createMockGoogleServices

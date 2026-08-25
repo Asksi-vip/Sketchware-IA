@@ -1,0 +1,586 @@
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/studio_drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/studio_background"
+    tools:openDrawer="start">
+
+    <LinearLayout
+        android:id="@+id/studio_root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/studio_background"
+        android:orientation="vertical">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/studio_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/chat_background"
+            app:elevation="0dp">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/studio_toolbar"
+                style="@style/Widget.Material3Expressive.Toolbar.OnSurface"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@drawable/bg_chat_toolbar"
+                app:navigationIconTint="@color/chat_text_primary"
+                app:titleTextColor="@color/chat_text_primary"
+                app:subtitleTextColor="@color/chat_text_secondary"
+                tools:subtitle=".sketcware_ide/601"
+                tools:title="Android Studio Project" />
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/studio_progress"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:indeterminate="true"
+                android:visibility="gone"
+                app:indicatorColor="@color/studio_accent"
+                app:trackColor="@color/studio_border"
+                tools:visibility="visible" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/studio_body"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/studio_workspace_panel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/studio_output_sheet_peek_height">
+
+                <LinearLayout
+                    android:id="@+id/studio_file_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_studio_surface_alt"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/studio_selected_icon"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginEnd="10dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_mtrl_file"
+                        android:tint="@color/studio_text_secondary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/studio_selected_file"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:text="@string/studio_select_file"
+                            android:textColor="@color/studio_text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/studio_selected_path"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="11sp"
+                            tools:text="app/src/main/java/MainActivity.java" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/studio_file_tabs"
+                    style="@style/Widget.SketchwarePro.TabLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_studio_surface_alt"
+                    android:visibility="gone"
+                    app:tabGravity="start"
+                    app:tabInlineLabel="true"
+                    app:tabMaxWidth="264dp"
+                    app:tabMinWidth="112dp"
+                    app:tabMode="scrollable"
+                    tools:visibility="visible" />
+
+                <FrameLayout
+                    android:id="@+id/studio_stage"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:background="@color/studio_code_background">
+
+                    <FrameLayout
+                        android:id="@+id/studio_editor_stack"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <io.github.rosemoe.sora.widget.CodeEditor
+                            android:id="@+id/studio_editor"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </FrameLayout>
+
+                    <ScrollView
+                        android:id="@+id/studio_image_preview_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/studio_code_background"
+                        android:fillViewport="true"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/studio_image_preview"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:adjustViewBounds="true"
+                            android:contentDescription="@string/studio_image_preview"
+                            android:padding="16dp"
+                            android:scaleType="fitCenter" />
+                    </ScrollView>
+
+                    <LinearLayout
+                        android:id="@+id/studio_empty_state"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="24dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_mtrl_folder_code"
+                            android:tint="@color/studio_text_secondary" />
+
+                        <TextView
+                            android:id="@+id/studio_empty_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:gravity="center"
+                            android:text="@string/studio_no_file_title"
+                            android:textColor="@color/studio_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/studio_empty_message"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:gravity="center"
+                            android:text="@string/studio_no_file_message"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:id="@+id/studio_search_replace_panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/studio_surface_alt"
+                    android:orientation="vertical"
+                    android:paddingStart="12dp"
+                    android:paddingTop="6dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="6dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/studio_search_result_label"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="@string/studio_search_results_empty"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/studio_search_case"
+                            android:layout_width="40dp"
+                            android:layout_height="match_parent"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:text="@string/studio_search_case_toggle"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/studio_search_word"
+                            android:layout_width="40dp"
+                            android:layout_height="match_parent"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:text="@string/studio_search_word_toggle"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/studio_search_close"
+                            android:layout_width="36dp"
+                            android:layout_height="match_parent"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:text="@string/studio_search_close"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:text="@string/studio_search_find_label"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="13sp" />
+
+                        <EditText
+                            android:id="@+id/studio_search_find"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:backgroundTint="@color/studio_text_secondary"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:singleLine="true"
+                            android:textColor="@color/studio_text_primary"
+                            android:textColorHint="@color/studio_text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:text="@string/studio_search_replace_label"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="13sp" />
+
+                        <EditText
+                            android:id="@+id/studio_search_replace"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:backgroundTint="@color/studio_accent"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:singleLine="true"
+                            android:textColor="@color/studio_text_primary"
+                            android:textColorHint="@color/studio_text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/studio_search_prev"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:text="@string/studio_search_previous"
+                            android:textColor="@color/studio_text_primary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/studio_search_next"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:text="@string/studio_search_next"
+                            android:textColor="@color/studio_text_primary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/studio_search_replace_one"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:text="@string/studio_search_replace_one"
+                            android:textColor="@color/studio_text_primary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/studio_search_replace_all"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:text="@string/common_word_all"
+                            android:textColor="@color/studio_text_primary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/studio_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:background="@color/studio_status_background"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textColor="@color/studio_text_secondary"
+                    android:textSize="11sp"
+                    tools:text="Ready" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/studio_output_sheet"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_studio_panel"
+                android:elevation="12dp"
+                android:orientation="vertical"
+                app:behavior_hideable="false"
+                app:behavior_peekHeight="@dimen/studio_output_sheet_peek_height"
+                app:layout_behavior="@string/bottom_sheet_behavior">
+
+                <LinearLayout
+                    android:id="@+id/studio_output_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/studio_output_sheet_peek_height"
+                    android:background="@color/studio_surface_alt"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="6dp">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:contentDescription="@string/studio_build_output"
+                        android:src="@drawable/ic_mtrl_terminal"
+                        app:tint="@color/studio_text_secondary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/studio_output_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/studio_build_output"
+                            android:textColor="@color/studio_text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/studio_output_summary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/studio_output_ready"
+                            android:textColor="@color/studio_text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/studio_output_clear"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/studio_output_clear"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_mtrl_clear_all"
+                        app:tint="@color/studio_text_secondary" />
+
+                    <ImageButton
+                        android:id="@+id/studio_output_toggle"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/studio_output_expand"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_mtrl_arrow_up"
+                        app:tint="@color/studio_text_secondary" />
+                </LinearLayout>
+
+                <ScrollView
+                    android:id="@+id/studio_output_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:background="@color/studio_output_background"
+                    android:fillViewport="true">
+
+                    <TextView
+                        android:id="@+id/studio_output"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:padding="16dp"
+                        android:text="@string/studio_output_ready"
+                        android:textColor="@color/studio_text_primary"
+                        android:textIsSelectable="true"
+                        android:textSize="12sp" />
+                </ScrollView>
+            </LinearLayout>
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/studio_file_panel"
+        android:layout_width="320dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@drawable/bg_studio_panel"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/studio_file_panel_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:paddingStart="12dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="12dp"
+            android:singleLine="true"
+            android:text="@string/studio_files"
+            android:textColor="@color/studio_text_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/studio_project_path"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="8dp"
+            android:singleLine="true"
+            android:textColor="@color/studio_text_secondary"
+            android:textSize="11sp"
+            tools:text=".sketcware_ide/601" />
+
+        <LinearLayout
+            android:id="@+id/studio_search_box"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bg_studio_search"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingEnd="8dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_mtrl_search"
+                android:tint="@color/studio_text_secondary" />
+
+            <EditText
+                android:id="@+id/studio_file_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="@string/studio_search_files"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="@color/studio_text_primary"
+                android:textColorHint="@color/studio_text_secondary"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_mtrl_tune"
+                android:tint="@color/studio_text_secondary" />
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/studio_file_tree_horizontal_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="horizontal">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/studio_file_tree"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:minWidth="320dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:paddingBottom="8dp"
+                tools:itemCount="10"
+                tools:listitem="@layout/item_studio_file_tree" />
+        </HorizontalScrollView>
+    </LinearLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

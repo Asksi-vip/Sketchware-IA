@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest a focused improvement for Sketchware IA
+title: "[Feature]: "
+labels: [ "enhancement" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement. Clear, focused requests are much easier to review and build.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What limitation, frustration, or missing capability are you trying to address?
+      placeholder: Explain the current problem or workflow pain point.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the improvement you would like to see.
+      placeholder: Explain the behavior, UI, or workflow you expect.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other ideas, workarounds, or designs did you consider?
+      placeholder: Share other options you evaluated.
+    validations:
+      required: false
+  - type: textarea
+    id: extra-context
+    attributes:
+      label: Additional context
+      description: Add screenshots, mockups, references, or links if helpful.
+      placeholder: Any extra context that would help evaluate this request.
+    validations:
+      required: false
