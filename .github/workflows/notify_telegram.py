@@ -10,8 +10,8 @@ def get_git_commit_info():
         commit_hash = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%H']).decode('utf-8')
         commit_hash_short = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%h']).decode('utf-8')
     except Exception:
-        commit_author = "Developer"
-        commit_message = "New build update"
+        commit_author = "المطور"
+        commit_message = "تحديث جديد"
         commit_hash = "latest"
         commit_hash_short = "latest"
     return commit_author, commit_message, commit_hash, commit_hash_short
@@ -30,9 +30,10 @@ def main():
     commit_author, commit_message, commit_hash, commit_hash_short = get_git_commit_info()
 
     message = (
-        f"A new commit has been pushed to the repository by *{commit_author}*.\n\n"
-        f"*What has changed:*\n>{escape_parentheses(commit_message)}\n\n"
-        f"Building APK now and sending it here upon completion...\n\n#{commit_hash_short}"
+        f"🚀 *تحديث جديد لمشروع Sketchware IA*\n\n"
+        f"👤 *المطور:* {commit_author}\n"
+        f"📝 *تفاصيل التحديث:*\n>{escape_parentheses(commit_message)}\n\n"
+        f"⚙️ جارٍ الآن بناء ملف الـ APK وسوف يتم إرساله هنا فور الاكتفاء (خلال ~5 دقائق)...\n\n#{commit_hash_short}"
     )
 
     escaped_message = escape_markdown_v2(message)
@@ -50,7 +51,7 @@ def main():
         if response.status_code != 200:
             print(f"Failed to send message: {response.status_code} {response.text}")
         else:
-            print("Message sent successfully to Telegram.")
+            print("Arabic notification sent successfully to Telegram.")
     except Exception as e:
         print(f"Error sending Telegram notification: {e}")
 

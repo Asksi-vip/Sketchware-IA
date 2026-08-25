@@ -8,8 +8,8 @@ def get_git_commit_info():
         commit_message = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%s']).decode('utf-8')
         commit_hash_short = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%h']).decode('utf-8')
     except Exception:
-        commit_author = "Developer"
-        commit_message = "New build update"
+        commit_author = "المطور"
+        commit_message = "تحديث جديد"
         commit_hash_short = "latest"
     return commit_author, commit_message, commit_hash_short
 
@@ -34,11 +34,12 @@ def main():
     size_str = human_readable_size(file_size)
 
     caption = (
-        f"🚀 *Sketchware IA APK Build Ready!*\n\n"
-        f"👤 *Author:* {commit_author}\n"
-        f"📝 *Commit:* {commit_message}\n"
-        f"📌 *Hash:* #{commit_hash_short}\n"
-        f"📦 *Size:* {size_str}"
+        f"✅ *تم بنجاح بناء تطبيق Sketchware IA!*\n\n"
+        f"👤 *المطور:* {commit_author}\n"
+        f"📝 *التغييرات:* {commit_message}\n"
+        f"📌 *معرف التحديث:* #{commit_hash_short}\n"
+        f"📦 *حجم الملف:* {size_str}\n\n"
+        f"📱 يمكنك تنزيل وتثبيت الـ APK الآن على هاتفك."
     )
 
     url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
