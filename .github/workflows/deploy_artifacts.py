@@ -1,23 +1,17 @@
-import asyncio
-from telethon import TelegramClient
 import os
 import subprocess
+import requests
 
 def get_git_commit_info():
-    commit_author = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%an']).decode()
-    commit_message = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%s']).decode()
-    commit_hash = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%H']).decode()
-    commit_hash_short = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%h']).decode()
-    return commit_author, commit_message, commit_hash, commit_hash_short
-
-api_id = int(os.getenv("API_ID"))
-api_hash = os.getenv("API_HASH")
-bot_token = os.getenv("BOT_TOKEN")
-group_id = int(os.getenv("CHAT_ID"))
-apk_path = os.getenv("APK_PATH")
-topic_id = int(os.getenv("TOPIC_ID"))
-
-commit_author, commit_message, commit_hash, commit_hash_short = get_git_commit_info()
+    try:
+        commit_author = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%an']).decode('utf-8')
+        commit_message = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%s']).decode('utf-8')
+        commit_hash_short = subprocess.check_output(['git', 'log', '-1', '--pretty=format:%h']).decode('utf-8')
+    except Exception:
+        commit_author = "Developer"
+        commit_message = "New build update"
+        commit_hash_short = "latest"
+    return commit_author, commit_message, commit_hash_short
 
 def human_readable_size(size, decimal_places=2):
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
@@ -26,68 +20,43 @@ def human_readable_size(size, decimal_places=2):
         size /= 1024.0
     return f"{size:.{decimal_places}f} {unit}"
 
-async def progress(current, total):
-    pct = (current / total) * 100
-    print(f"{pct:.2f}% - {human_readable_size(current)}/{human_readable_size(total)}", end="\r")
+def main():
+    bot_token = os.environ.get("BOT_TOKEN") or "8598821558:AAGuCWdMA4uryFynQTn1qfJYH0ZLM7JaJ9c"
+    chat_id = os.environ.get("CHAT_ID") or "-1004345954573"
+    apk_path = os.environ.get("APK_PATH")
 
-async def send_file(client, file_path):
-    if not os.path.exists(file_path):
-        print("File not found:", file_path)
-        return False
+    if not apk_path or not os.path.exists(apk_path):
+        print("File not found:", apk_path)
+        return
+
+    commit_author, commit_message, commit_hash_short = get_git_commit_info()
+    file_size = os.path.getsize(apk_path)
+    size_str = human_readable_size(file_size)
 
     caption = (
-        f"**Commit by:** {commit_author}\n"
-        f"**Commit message:** {commit_message}\n"
-        f"**Commit hash:** #{commit_hash_short}\n"
-        f"**Version:** Android >= 8"
+        f"🚀 *Sketchware IA APK Build Ready!*\n\n"
+        f"👤 *Author:* {commit_author}\n"
+        f"📝 *Commit:* {commit_message}\n"
+        f"📌 *Hash:* #{commit_hash_short}\n"
+        f"📦 *Size:* {size_str}"
     )
 
-    await client.send_file(
-        entity=group_id,
-        file=file_path,
-        caption=caption,
-        parse_mode="markdown",
-        progress_callback=progress,
-        reply_to=topic_id
-    )
-    return True
+    url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+    print(f"Uploading APK ({size_str}) to Telegram chat {chat_id}...")
 
-async def connect_with_retry(client, max_attempts=3):
-    for attempt in range(1, max_attempts + 1):
-        try:
-            await client.start(bot_token=bot_token)
-            return
-        except Exception as e:
-            if attempt == max_attempts:
-                raise
-            print(f"\nConnect attempt {attempt}/{max_attempts} failed: {e}")
-            await client.disconnect()
-            await asyncio.sleep(attempt * 5)
+    with open(apk_path, 'rb') as f:
+        files = {'document': f}
+        data = {
+            'chat_id': chat_id,
+            'caption': caption,
+            'parse_mode': 'markdown'
+        }
+        response = requests.post(url, data=data, files=files, timeout=300)
 
-async def send_file_with_retry(client, file_path, max_attempts=3):
-    for attempt in range(1, max_attempts + 1):
-        try:
-            return await send_file(client, file_path)
-        except Exception as e:
-            if attempt == max_attempts:
-                raise
-            print(f"\nUpload attempt {attempt}/{max_attempts} failed: {e}")
-            await asyncio.sleep(attempt * 5)
-
-async def main():
-    client = TelegramClient("bot_session", api_id, api_hash)
-
-    try:
-        await connect_with_retry(client)
-        sent = await send_file_with_retry(client, apk_path)
-        if not sent:
-            return
-        print("\nFile sent successfully")
-    except Exception as e:
-        print("\nFailed:", e)
-        raise
-    finally:
-        await client.disconnect()
+    if response.status_code == 200:
+        print("APK file sent successfully to Telegram!")
+    else:
+        print(f"Failed to send APK: {response.status_code} {response.text}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
