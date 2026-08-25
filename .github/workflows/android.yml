@@ -216,10 +216,14 @@ jobs:
         env:
           GH_ABOUT_APP_WORKFLOW_TOKEN: ${{ secrets.GH_ABOUT_APP_WORKFLOW_TOKEN }}
         run: |
-          git checkout host
-          git config --global user.name "Sketchware Pro Actions"
-          git config --global user.email "hello@sketchware.pro"
-          git add about.json
-          git commit -m "feat: Update app about screen data"
-          git push
+          if git rev-parse --verify host >/dev/null 2>&1 || git fetch origin host:host >/dev/null 2>&1; then
+            git checkout host
+            git config --global user.name "Sketchware Pro Actions"
+            git config --global user.email "hello@sketchware.pro"
+            git add about.json
+            git commit -m "feat: Update app about screen data" || true
+            git push || true
+          else
+            echo "Branch 'host' does not exist, skipping push."
+          fi
         continue-on-error: true
