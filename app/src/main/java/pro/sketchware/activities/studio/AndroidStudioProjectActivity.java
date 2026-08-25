@@ -2807,28 +2807,25 @@ public class AndroidStudioProjectActivity extends BaseAppCompatActivity {
     private int priorityForInitialFile(File file) {
         String relative = relativePath(file).toLowerCase(Locale.US);
         String name = file.getName().toLowerCase(Locale.US);
-        if (name.equals("mainactivity.java")) {
+        if (name.equals("mainactivity.kt") || name.equals("mainactivity.java")) {
             return 0;
         }
-        if (relative.contains("/src/main/java/") && name.endsWith(".java")) {
+        if ((relative.contains("/src/main/java/") || relative.contains("/src/main/kotlin/")) && (name.endsWith(".kt") || name.endsWith(".java"))) {
             return 1;
         }
-        if (relative.contains("/src/main/kotlin/") && name.endsWith(".kt")) {
+        if (relative.contains("/src/main/res/layout/") && name.endsWith(".xml")) {
             return 2;
         }
         if (name.equals("androidmanifest.xml")) {
             return 3;
         }
-        if (relative.contains("/src/main/res/layout/") && name.endsWith(".xml")) {
+        if (name.endsWith(".java") || name.endsWith(".kt")) {
             return 4;
         }
-        if (name.endsWith(".java") || name.endsWith(".kt")) {
+        if (name.endsWith(".xml")) {
             return 5;
         }
-        if (name.endsWith(".xml")) {
-            return 6;
-        }
-        return 7;
+        return 6;
     }
 
     private boolean shouldSkip(File file) {
