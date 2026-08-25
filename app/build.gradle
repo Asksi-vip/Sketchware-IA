@@ -40,6 +40,12 @@ android {
         buildConfigField("String", "GIT_HASH", "\"${gitCommitHash}\"")
     }
 
+    sourceSets {
+        main {
+            java.srcDirs = ['src/main/java']
+        }
+    }
+
     signingConfigs {
         debug {
             def defaultKs = file("sketchware-ia.keystore")
