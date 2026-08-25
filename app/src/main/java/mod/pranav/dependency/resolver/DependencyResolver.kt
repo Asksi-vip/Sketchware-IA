@@ -116,12 +116,13 @@ class DependencyResolver(
             return@runBlocking
         }
 
-        val libraryJars = listOf(
+        val libraryJars: List<Path> = listOf(
             BuiltInLibraries.EXTRACTED_COMPILE_ASSETS_PATH.toPath()
-                .resolve("core-lambda-stubs.jar"), Paths.get(
+                .resolve("core-lambda-stubs.jar"),
+            Paths.get(
                 buildSettings.getValue(
                     BuildSettings.SETTING_ANDROID_JAR_PATH,
-                    BuiltInLibraries.EXTRACTED_COMPILE_ASSETS_PATH.resolve("android.jar").absolutePath
+                    File(BuiltInLibraries.EXTRACTED_COMPILE_ASSETS_PATH, "android.jar").absolutePath
                 )
             )
         )
