@@ -38,7 +38,7 @@ sdklib = "25.3.0"
 staxApi = "1.0-2"
 swiperefreshlayout = "1.1.0"
 viewpager = "1.1.0"
-woodstoxCore = "7.1.1"
+woodstoxCore = "7.2.2"
 zipalignJava = "1.2.2"
 
 [libraries]
