@@ -287,10 +287,22 @@ class DependencyResolver(
 
     private fun compileJar(jarFile: Path, jars: List<Path>, libraryJars: List<Path>) {
         Files.createDirectories(jarFile.parent)
-        D8.run(
-            D8Command.builder().setIntermediate(true).setMode(CompilationMode.RELEASE)
-                .addProgramFiles(jarFile).addLibraryFiles(libraryJars).addClasspathFiles(jars)
-                .setOutput(jarFile.parent, OutputMode.DexIndexed).build()
-        )
+        val validLibraryJars = libraryJars.filter { Files.exists(it) && Files.isRegularFile(it) && Files.size(it) > 0 }
+        val validJars = jars.filter { Files.exists(it) && Files.isRegularFile(it) && Files.size(it) > 0 }
+
+        val builder = D8Command.builder()
+            .setIntermediate(true)
+            .setMode(CompilationMode.RELEASE)
+            .addProgramFiles(jarFile)
+            .setOutput(jarFile.parent, OutputMode.DexIndexed)
+
+        if (validLibraryJars.isNotEmpty()) {
+            builder.addLibraryFiles(validLibraryJars)
+        }
+        if (validJars.isNotEmpty()) {
+            builder.addClasspathFiles(validJars)
+        }
+
+        D8.run(builder.build())
     }
 }
