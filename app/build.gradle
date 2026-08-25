@@ -43,6 +43,7 @@ android {
     sourceSets {
         main {
             java.srcDirs = ['src/main/java']
+            kotlin.srcDirs = ['src/main/java']
         }
     }
 
