@@ -112,7 +112,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install telethon
+          pip install requests telethon
 
       - name: Get Git Commit Info
         run: |
