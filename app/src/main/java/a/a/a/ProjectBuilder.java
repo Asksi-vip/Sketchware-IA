@@ -637,13 +637,38 @@ public class ProjectBuilder {
         try {
             ApkBuilder apkBuilder = new ApkBuilder(new File(yq.unsignedUnalignedApkPath), new File(yq.resourcesApkPath), new File(firstDexPath), null, null, System.out);
 
+            boolean hasLocalKotlinStdlib = false;
+            for (String jarPath : mll.getJarLocalLibrary().split(":")) {
+                if (!jarPath.trim().isEmpty() && jarPath.toLowerCase(Locale.US).contains("kotlin-stdlib")) {
+                    hasLocalKotlinStdlib = true;
+                    break;
+                }
+            }
+
             for (Jp library : builtInLibraryManager.getLibraries()) {
-                apkBuilder.addResourcesFromJar(BuiltInLibraries.getLibraryClassesJarPath(library.getName()));
+                File jarFile = BuiltInLibraries.getLibraryClassesJarPath(library.getName());
+                if (jarFile != null && jarFile.exists()) {
+                    if (hasLocalKotlinStdlib && jarFile.getName().toLowerCase(Locale.US).contains("kotlin-stdlib")) {
+                        continue;
+                    }
+                    try {
+                        apkBuilder.addResourcesFromJar(jarFile);
+                    } catch (DuplicateFileException ignored) {
+                        LogUtil.w(TAG, "Skipping duplicate resource file from library " + library.getName() + ": " + ignored.getMessage());
+                    }
+                }
             }
 
             for (String jarPath : mll.getJarLocalLibrary().split(":")) {
                 if (!jarPath.trim().isEmpty()) {
-                    apkBuilder.addResourcesFromJar(new File(jarPath));
+                    File jarFile = new File(jarPath);
+                    if (jarFile.exists()) {
+                        try {
+                            apkBuilder.addResourcesFromJar(jarFile);
+                        } catch (DuplicateFileException ignored) {
+                            LogUtil.w(TAG, "Skipping duplicate resource file from jar " + jarPath + ": " + ignored.getMessage());
+                        }
+                    }
                 }
             }
 
