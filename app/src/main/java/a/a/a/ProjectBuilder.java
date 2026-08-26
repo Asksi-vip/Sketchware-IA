@@ -716,6 +716,22 @@ public class ProjectBuilder {
                 (System.currentTimeMillis() - timestampResourceCompilationStarted) + " ms");
     }
 
+    private void addDexFileSafely(ArrayList<File> list, Set<String> addedPaths, File file) {
+        if (file != null && file.exists() && file.isFile()) {
+            try {
+                String path = file.getCanonicalPath();
+                if (addedPaths.add(path)) {
+                    list.add(file);
+                }
+            } catch (IOException e) {
+                String path = file.getAbsolutePath();
+                if (addedPaths.add(path)) {
+                    list.add(file);
+                }
+            }
+        }
+    }
+
     /**
      * Either merges DEX files to as few as possible, or adds list of DEX files to add to the APK to
      * {@link #dexesToAddButNotMerge}.
@@ -728,21 +744,30 @@ public class ProjectBuilder {
     public void getDexFilesReady() throws Exception {
         long savedTimeMillis = System.currentTimeMillis();
         ArrayList<File> dexes = new ArrayList<>();
+        Set<String> addedPaths = new HashSet<>();
+
+        /* Add project's compiled DEX files first (so classes.dex is the app entry DEX) */
+        List<String> projectDexFiles = FileUtil.listFiles(yq.binDirectoryPath + File.separator + "dex", "dex");
+        if (projectDexFiles != null) {
+            for (String file : projectDexFiles) {
+                addDexFileSafely(dexes, addedPaths, new File(file));
+            }
+        }
 
         /* Add AndroidX MultiDex library if needed */
         if (settings.getMinSdkVersion() < 21) {
-            dexes.add(BuiltInLibraries.getLibraryDexFile(BuiltInLibraries.ANDROIDX_MULTIDEX));
+            addDexFileSafely(dexes, addedPaths, BuiltInLibraries.getLibraryDexFile(BuiltInLibraries.ANDROIDX_MULTIDEX));
         }
 
         /* Add HTTP legacy files if wanted */
         if (!build_settings.getValue(BuildSettings.SETTING_NO_HTTP_LEGACY, ProjectSettings.SETTING_GENERIC_VALUE_FALSE)
                 .equals(ProjectSettings.SETTING_GENERIC_VALUE_TRUE)) {
-            dexes.add(BuiltInLibraries.getLibraryDexFile(BuiltInLibraries.HTTP_LEGACY_ANDROID));
+            addDexFileSafely(dexes, addedPaths, BuiltInLibraries.getLibraryDexFile(BuiltInLibraries.HTTP_LEGACY_ANDROID));
         }
 
         /* Add used built-in libraries' DEX files */
         for (Jp builtInLibrary : builtInLibraryManager.getLibraries()) {
-            dexes.add(BuiltInLibraries.getLibraryDexFile(builtInLibrary.getName()));
+            addDexFileSafely(dexes, addedPaths, BuiltInLibraries.getLibraryDexFile(builtInLibrary.getName()));
         }
 
         /* Add local libraries' main DEX files */
@@ -756,7 +781,7 @@ public class ProjectBuilder {
 
                 if (localLibraryDexPath instanceof String) {
                     if (!proguard.libIsProguardFMEnabled((String) localLibraryName)) {
-                        dexes.add(new File((String) localLibraryDexPath));
+                        addDexFileSafely(dexes, addedPaths, new File((String) localLibraryDexPath));
                         /* Add library's extra DEX files */
                         File localLibraryDirectory = new File((String) localLibraryDexPath).getParentFile();
 
@@ -769,7 +794,7 @@ public class ProjectBuilder {
 
                                     if (!filename.equals("classes.dex")
                                             && filename.startsWith("classes") && filename.endsWith(".dex")) {
-                                        dexes.add(localLibraryFile);
+                                        addDexFileSafely(dexes, addedPaths, localLibraryFile);
                                     }
                                 }
                             }
@@ -781,10 +806,6 @@ public class ProjectBuilder {
             } else {
                 SketchwareUtil.toastError("Invalid name of enabled Local library #" + i1, Toast.LENGTH_LONG);
             }
-        }
-
-        for (String file : FileUtil.listFiles(yq.binDirectoryPath + File.separator + "dex", "dex")) {
-            dexes.add(new File(file));
         }
 
         LogUtil.d(TAG, "Will merge these " + dexes.size() + " DEX files to classes.dex: " + dexes);
