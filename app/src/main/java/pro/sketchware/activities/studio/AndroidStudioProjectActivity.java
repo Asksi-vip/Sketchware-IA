@@ -91,6 +91,7 @@ import pro.sketchware.databinding.ItemStudioFileTreeBinding;
 import pro.sketchware.util.ProjectPathResolver;
 import pro.sketchware.utility.CodeFormatAndGenerateHelper;
 import pro.sketchware.utility.CodeNavigationHelper;
+import pro.sketchware.utility.ProblemsPanelDialog;
 import pro.sketchware.utility.EditorUtils;
 import pro.sketchware.utility.FileUtil;
 import pro.sketchware.utility.SketchwareUtil;
@@ -277,7 +278,7 @@ public class AndroidStudioProjectActivity extends BaseAppCompatActivity {
             }
             if (item.getItemId() == MENU_ERRORS) {
                 logStudioAction("errors");
-                showCompileErrorGuide();
+                ProblemsPanelDialog.showProblemsPanel(this, getActiveEditor(), currentFile, scId);
                 return true;
             }
             if (item.getItemId() == MENU_NEW_FILE) {
@@ -436,7 +437,7 @@ public class AndroidStudioProjectActivity extends BaseAppCompatActivity {
         setToolbarItemChecked(menu, MENU_SMOOTH_MODE, smoothMode);
 
         setToolbarItem(menu, MENU_BUILD, projectLoaded, projectLoaded && !buildRunning);
-        setToolbarItem(menu, MENU_ERRORS, false, false);
+        setToolbarItem(menu, MENU_ERRORS, codeFileVisible, codeFileVisible);
         setToolbarItem(menu, MENU_NEW_FILE, projectLoaded, projectLoaded);
         setToolbarItem(menu, MENU_ADD_RESOURCE, projectLoaded, projectLoaded);
         setToolbarItem(menu, MENU_ADD_ICON, projectLoaded, projectLoaded);

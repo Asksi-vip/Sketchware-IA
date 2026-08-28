@@ -90,11 +90,15 @@ public class CodeNavigationHelper {
         String formatLabel = editor.hasSelection() ? "🧹 Format Selection" : "🧹 Format Code";
 
         CharSequence[] options = symbol.isEmpty() ? new CharSequence[]{
+                "🚨 Problems Panel",
+                "➡️ Next Error",
                 formatLabel,
                 "⚡ Generate Code..."
         } : new CharSequence[]{
                 "📍 Go to Definition (" + symbol + ")",
                 "🔎 Find References (" + symbol + ")",
+                "🚨 Problems Panel",
+                "➡️ Next Error",
                 formatLabel,
                 "⚡ Generate Code..."
         };
@@ -104,8 +108,12 @@ public class CodeNavigationHelper {
                 .setItems(options, (dialog, which) -> {
                     if (symbol.isEmpty()) {
                         if (which == 0) {
-                            CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(activity, editor, null);
+                            ProblemsPanelDialog.showProblemsPanel(activity, editor, projectRoot, null);
                         } else if (which == 1) {
+                            ProblemsPanelDialog.navigateError(activity, editor, projectRoot, null, true);
+                        } else if (which == 2) {
+                            CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(activity, editor, null);
+                        } else if (which == 3) {
                             CodeFormatAndGenerateHelper.showGenerateCodeMenu(activity, editor, null);
                         }
                     } else {
@@ -114,8 +122,12 @@ public class CodeNavigationHelper {
                         } else if (which == 1) {
                             findReferences(activity, projectRoot, symbol);
                         } else if (which == 2) {
-                            CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(activity, editor, null);
+                            ProblemsPanelDialog.showProblemsPanel(activity, editor, projectRoot, null);
                         } else if (which == 3) {
+                            ProblemsPanelDialog.navigateError(activity, editor, projectRoot, null, true);
+                        } else if (which == 4) {
+                            CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(activity, editor, null);
+                        } else if (which == 5) {
                             CodeFormatAndGenerateHelper.showGenerateCodeMenu(activity, editor, null);
                         }
                     }

@@ -429,6 +429,7 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Word wrap").setCheckable(true).setChecked(local_pref.getBoolean("act_ww", false));
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Pretty print");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Generate code");
+            toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Problems");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Select language");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Select theme");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Auto complete").setCheckable(true).setChecked(local_pref.getBoolean("act_ac", true));
@@ -456,6 +457,11 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
 
                     case "Generate code":
                         CodeFormatAndGenerateHelper.showGenerateCodeMenu(this, binding.editor, null);
+                        break;
+
+                    case "Problems":
+                        File projectRoot = new File(FileUtil.getExternalStorageDir() + "/.sketchware/data/" + scId);
+                        ProblemsPanelDialog.showProblemsPanel(this, binding.editor, projectRoot, scId);
                         break;
 
                     case "Select language":
