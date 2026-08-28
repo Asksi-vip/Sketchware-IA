@@ -89,6 +89,7 @@ import pro.sketchware.R;
 import pro.sketchware.databinding.ActivityAndroidStudioProjectBinding;
 import pro.sketchware.databinding.ItemStudioFileTreeBinding;
 import pro.sketchware.util.ProjectPathResolver;
+import pro.sketchware.utility.CodeNavigationHelper;
 import pro.sketchware.utility.EditorUtils;
 import pro.sketchware.utility.FileUtil;
 import pro.sketchware.utility.SketchwareUtil;
@@ -554,6 +555,33 @@ public class AndroidStudioProjectActivity extends BaseAppCompatActivity {
         SrcCodeEditor.loadCESettings(this, editor, "studio", true);
         applyDefaultEditorTheme(editor);
         applyEditorPreferenceState(editor);
+        editor.setOnLongClickListener(v -> {
+            File root = (workspace != null && workspace.projectDir != null) ? workspace.projectDir : (currentFile != null ? currentFile.getParentFile() : null);
+            CodeNavigationHelper.showNavigationMenu(this, editor, root);
+            return true;
+        });
+    }
+
+    public void openFileAndJumpToPosition(File file, int line, int column, String symbolName) {
+        if (file == null || !file.exists()) return;
+        openFile(file, true);
+        CodeEditor editor = getActiveEditor();
+        if (editor != null) {
+            editor.post(() -> {
+                int safeLine = Math.max(0, Math.min(line, editor.getLineCount() - 1));
+                int lineLength = editor.getText().getColumnCount(safeLine);
+                int safeColumn = Math.max(0, Math.min(column, lineLength));
+                int symLen = symbolName == null ? 0 : symbolName.length();
+                int endColumn = Math.min(lineLength, safeColumn + symLen);
+
+                if (symLen > 0 && endColumn > safeColumn) {
+                    editor.setSelectionRegion(safeLine, safeColumn, safeLine, endColumn);
+                } else {
+                    editor.setSelection(safeLine, safeColumn, false);
+                }
+                editor.ensurePositionVisible(safeLine, safeColumn, !smoothMode);
+            });
+        }
     }
 
     private CodeEditor getActiveEditor() {

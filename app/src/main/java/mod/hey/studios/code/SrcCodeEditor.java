@@ -62,6 +62,7 @@ import pro.sketchware.R;
 import pro.sketchware.activities.chat.port.VoidPortAiAutocompleteLanguage;
 import pro.sketchware.activities.preview.LayoutPreviewActivity;
 import pro.sketchware.databinding.CodeEditorHsBinding;
+import pro.sketchware.utility.CodeNavigationHelper;
 import pro.sketchware.utility.EditorUtils;
 import pro.sketchware.utility.FileUtil;
 import pro.sketchware.utility.SketchwareUtil;
@@ -327,8 +328,34 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
         loadCESettings(this, binding.editor, "act", true);
         loadToolbar();
 
+        binding.editor.setOnLongClickListener(v -> {
+            File projectRoot = new File(FileUtil.getExternalStorageDir() + "/.sketchware/data/" + scId);
+            CodeNavigationHelper.showNavigationMenu(this, binding.editor, projectRoot);
+            return true;
+        });
+
         UI.addSystemWindowInsetToPadding(binding.appBarLayout, true, true, true, false);
         UI.addSystemWindowInsetToMargin(binding.editor, true, false, true, true);
+    }
+
+    public void jumpToPositionInFile(File file, int line, int column, String symbolName) {
+        CodeEditor editor = binding.editor;
+        if (editor != null) {
+            editor.post(() -> {
+                int safeLine = Math.max(0, Math.min(line, editor.getLineCount() - 1));
+                int lineLength = editor.getText().getColumnCount(safeLine);
+                int safeColumn = Math.max(0, Math.min(column, lineLength));
+                int symLen = symbolName == null ? 0 : symbolName.length();
+                int endColumn = Math.min(lineLength, safeColumn + symLen);
+
+                if (symLen > 0 && endColumn > safeColumn) {
+                    editor.setSelectionRegion(safeLine, safeColumn, safeLine, endColumn);
+                } else {
+                    editor.setSelection(safeLine, safeColumn, false);
+                }
+                editor.ensurePositionVisible(safeLine, safeColumn, true);
+            });
+        }
     }
 
     public void save() {
