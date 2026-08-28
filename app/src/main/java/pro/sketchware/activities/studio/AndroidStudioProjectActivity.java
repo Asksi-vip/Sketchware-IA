@@ -558,7 +558,7 @@ public class AndroidStudioProjectActivity extends BaseAppCompatActivity {
         applyDefaultEditorTheme(editor);
         applyEditorPreferenceState(editor);
         editor.setOnLongClickListener(v -> {
-            File root = (workspace != null && workspace.projectDir != null) ? workspace.projectDir : (currentFile != null ? currentFile.getParentFile() : null);
+            File root = (projectRoot != null) ? projectRoot : (currentFile != null ? currentFile.getParentFile() : null);
             CodeNavigationHelper.showNavigationMenu(this, editor, root);
             return true;
         });

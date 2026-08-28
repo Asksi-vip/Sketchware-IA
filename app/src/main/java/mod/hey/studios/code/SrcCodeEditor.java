@@ -64,6 +64,7 @@ import pro.sketchware.activities.preview.LayoutPreviewActivity;
 import pro.sketchware.databinding.CodeEditorHsBinding;
 import pro.sketchware.utility.CodeFormatAndGenerateHelper;
 import pro.sketchware.utility.CodeNavigationHelper;
+import pro.sketchware.utility.ProblemsPanelDialog;
 import pro.sketchware.utility.EditorUtils;
 import pro.sketchware.utility.FileUtil;
 import pro.sketchware.utility.SketchwareUtil;

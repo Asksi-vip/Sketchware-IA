@@ -33,14 +33,27 @@ import mod.hey.studios.code.SrcCodeEditor;
  */
 public class CodeNavigationHelper {
 
+    public static boolean hasSelection(CodeEditor editor) {
+        return editor != null && editor.getCursor() != null && editor.getCursor().isSelected();
+    }
+
     public static String getSymbolAtCursor(CodeEditor editor) {
         if (editor == null || editor.getText() == null) {
             return "";
         }
-        if (editor.hasSelection()) {
-            String selected = editor.getSelectedText();
-            if (selected != null && !selected.trim().isEmpty()) {
-                return SymbolIndexEngine.sanitizeSymbol(selected);
+        if (hasSelection(editor)) {
+            int leftLine = editor.getCursor().getLeftLine();
+            int leftCol = editor.getCursor().getLeftColumn();
+            int rightLine = editor.getCursor().getRightLine();
+            int rightCol = editor.getCursor().getRightColumn();
+            CharSequence lineSeq = editor.getText().getLine(leftLine);
+            if (lineSeq != null && leftLine == rightLine) {
+                int start = Math.max(0, Math.min(leftCol, lineSeq.length()));
+                int end = Math.max(start, Math.min(rightCol, lineSeq.length()));
+                String selected = lineSeq.subSequence(start, end).toString();
+                if (!selected.trim().isEmpty()) {
+                    return SymbolIndexEngine.sanitizeSymbol(selected);
+                }
             }
         }
         int line = editor.getCursor().getLeftLine();
@@ -87,7 +100,7 @@ public class CodeNavigationHelper {
     public static void showNavigationMenu(Activity activity, CodeEditor editor, File projectRoot) {
         if (activity == null || editor == null) return;
         String symbol = getSymbolAtCursor(editor);
-        String formatLabel = editor.hasSelection() ? "🧹 Format Selection" : "🧹 Format Code";
+        String formatLabel = hasSelection(editor) ? "🧹 Format Selection" : "🧹 Format Code";
 
         CharSequence[] options = symbol.isEmpty() ? new CharSequence[]{
                 "💡 Hover Info",

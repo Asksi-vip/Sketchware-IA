@@ -35,7 +35,7 @@ public class CodeFormatAndGenerateHelper {
             return;
         }
 
-        if (editor.hasSelection()) {
+        if (editor.getCursor() != null && editor.getCursor().isSelected()) {
             int startLine = editor.getCursor().getLeftLine();
             int endLine = editor.getCursor().getRightLine();
             String formattedFull = CodeFormatterEngine.formatSelection(fullCode, startLine, endLine, languageName);
