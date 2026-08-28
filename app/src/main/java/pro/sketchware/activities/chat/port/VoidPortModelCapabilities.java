@@ -189,6 +189,11 @@ public final class VoidPortModelCapabilities {
         add("ollama", "qwen3.5:397b-cloud", 128_000, 8_192, SystemMessageSupport.SYSTEM_ROLE, ToolFormat.XML_FALLBACK, false, ReasoningCapabilities.thinkTags(true, true, 8_192));
         add("ollama", "gpt-oss:20b-cloud", 128_000, 8_192, SystemMessageSupport.SYSTEM_ROLE, ToolFormat.OPENAI_STYLE, false, ReasoningCapabilities.thinkTags(true, true, 8_192));
         add("ollama", "gpt-oss:120b-cloud", 128_000, 8_192, SystemMessageSupport.SYSTEM_ROLE, ToolFormat.OPENAI_STYLE, false, ReasoningCapabilities.thinkTags(true, true, 8_192));
+
+        // Agnes AI — OpenAI-compatible (Base URL: https://apihub.agnes-ai.com/v1)
+        add("agnesai", "agnes-2.5-flash",     1_000_000, 8_192, SystemMessageSupport.SYSTEM_ROLE, ToolFormat.OPENAI_STYLE, false, ReasoningCapabilities.none());
+        add("agnesai", "agnes-2.0-flash",     1_000_000, 8_192, SystemMessageSupport.SYSTEM_ROLE, ToolFormat.OPENAI_STYLE, false, ReasoningCapabilities.none());
+        add("agnesai", "agnes-2.5-pro-alpha", 1_000_000, 8_192, SystemMessageSupport.SYSTEM_ROLE, ToolFormat.OPENAI_STYLE, false, ReasoningCapabilities.none());
     }
 
     private VoidPortModelCapabilities() {

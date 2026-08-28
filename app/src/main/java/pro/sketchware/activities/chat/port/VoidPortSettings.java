@@ -207,6 +207,7 @@ public final class VoidPortSettings {
                 || "ollama".equals(providerId)
                 || "vllm".equals(providerId)
                 || "lm_studio".equals(providerId)
+                || "agnesai".equals(providerId)
                 || (providerId != null && providerId.startsWith("custom_"));
     }
 
@@ -238,6 +239,7 @@ public final class VoidPortSettings {
             case "grok_xai" -> !getPreferenceValue(prefs, "grok_xai_api_key", "").isEmpty();
             case "mistral" -> !getPreferenceValue(prefs, "mistral_api_key", "").isEmpty();
             case "litellm" -> !getPreferenceValue(prefs, "litellm_base_url", "").isEmpty();
+            case "agnesai" -> !getPreferenceValue(prefs, "agnesai_api_key", "").isEmpty();
             default -> false;
         };
     }
@@ -334,6 +336,11 @@ public final class VoidPortSettings {
                 "ministral-8b-latest"
         ))));
         groups.add(new ProviderGroup("litellm", "liteLLM", "LiteLLM", false, new ArrayList<>()));
+        groups.add(new ProviderGroup("agnesai", "agnesAI", "Agnes AI", false, new ArrayList<>(List.of(
+                "agnes-2.5-flash",
+                "agnes-2.0-flash",
+                "agnes-2.5-pro-alpha"
+        ))));
         return groups;
     }
 
@@ -361,6 +368,8 @@ public final class VoidPortSettings {
                 .addField("Headers JSON", "openai_compatible_headers", "{}", false, null));
         providers.add(new ProviderCardSpec("litellm", "LiteLLM", "Point this to a LiteLLM proxy if you use one.", null, false)
                 .addField("Base URL", "litellm_base_url", "http://localhost:4000", false, null));
+        providers.add(new ProviderCardSpec("agnesai", "Agnes AI", "OpenAI-compatible API. Get your key at platform.agnes-ai.com", "https://platform.agnes-ai.com", false)
+                .addField("API Key", "agnesai_api_key", "", true, null));
         return providers;
     }
 
@@ -819,6 +828,7 @@ public final class VoidPortSettings {
             case "lm_studio" -> "lmStudio";
             case "litellm" -> "liteLLM";
             case "vllm" -> "vLLM";
+            case "agnesai" -> "agnesAI";
             default -> providerId;
         };
     }

@@ -163,6 +163,14 @@ public final class VoidPortLlmMessage {
                     readHeadersJson(null),
                     true
             );
+            case "agnesai" -> new ProviderConfig(
+                    "agnesai",
+                    ProviderFamily.OPENAI_COMPATIBLE,
+                    configuredRequestUrl(prefs, "agnesai", "https://apihub.agnes-ai.com/v1", "/chat/completions"),
+                    activeApiKey(prefs, "agnesai", prefs.getString("agnesai_api_key", "")),
+                    readHeadersJson(null),
+                    true
+            );
             default -> null;
         };
     }
