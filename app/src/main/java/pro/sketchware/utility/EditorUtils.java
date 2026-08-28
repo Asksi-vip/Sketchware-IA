@@ -17,6 +17,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula;
 import mod.jbk.code.CodeEditorColorSchemes;
 import mod.jbk.code.CodeEditorLanguages;
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
+import pro.sketchware.activities.chat.port.VoidPortAiAutocompleteLanguage;
 import pro.sketchware.R;
 
 public class EditorUtils {
@@ -60,7 +62,12 @@ public class EditorUtils {
 
     // todo: use dynamic color scheme for textmate language too
     private static void loadConfigByLanguage(CodeEditor editor, Language language, boolean isTextMate) {
-        editor.setEditorLanguage(language);
+        Language wrapped = VoidPortAiAutocompleteLanguage.wrap(editor.getContext(), "", "", isTextMate ? "xml" : "java", language);
+        editor.setEditorLanguage(wrapped);
+        try {
+            editor.getComponent(EditorAutoCompletion.class).setEnabled(true);
+        } catch (Throwable ignored) {
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (isDarkThemeEnabled(editor.getContext())) {
                 editor.setColorScheme(isTextMate ?

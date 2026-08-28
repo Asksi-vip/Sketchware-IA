@@ -123,24 +123,18 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
     }
 
     public static void selectLanguage(CodeEditor ed, int which) {
-        switch (which) {
-            default:
-            case 0:
-                ed.setEditorLanguage(new JavaLanguage());
-                languageId = 0;
-                break;
-
-            case 1:
-                ed.setEditorLanguage(CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_KOTLIN));
-                languageId = 1;
-                break;
-
-            case 2:
-                ed.setEditorLanguage(CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_XML));
-                languageId = 2;
-                break;
-        }
-
+        String langName = switch (which) {
+            case 1 -> "kotlin";
+            case 2 -> "xml";
+            default -> "java";
+        };
+        Language rawLang = switch (which) {
+            case 1 -> CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_KOTLIN);
+            case 2 -> CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_XML);
+            default -> new JavaLanguage();
+        };
+        ed.setEditorLanguage(VoidPortAiAutocompleteLanguage.wrap(ed.getContext(), "", "", langName, rawLang));
+        languageId = which;
     }
 
     public static String prettifyXml(String xml, int indentAmount, Intent extras) {

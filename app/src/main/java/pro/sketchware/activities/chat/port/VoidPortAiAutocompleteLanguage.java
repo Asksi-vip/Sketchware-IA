@@ -18,10 +18,11 @@ import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
+import pro.sketchware.utility.SmartCodeCompletionEngine;
 
 /**
  * Sora language wrapper that keeps the existing syntax/completion language and
- * adds one Void AI completion item while the user types.
+ * adds smart code completions (keywords, types, local symbols) and Void AI completion items while the user types.
  */
 public final class VoidPortAiAutocompleteLanguage implements Language {
     private final Context appContext;
@@ -62,7 +63,13 @@ public final class VoidPortAiAutocompleteLanguage implements Language {
     public void requireAutoComplete(@NonNull ContentReference content, @NonNull CharPosition position,
                                     @NonNull CompletionPublisher publisher,
                                     @NonNull Bundle extraArguments) {
-        delegate.requireAutoComplete(content, position, publisher, extraArguments);
+        if (delegate != null) {
+            delegate.requireAutoComplete(content, position, publisher, extraArguments);
+        }
+
+        // Smart Code Completion (Keywords, Types, Local Symbols)
+        SmartCodeCompletionEngine.computeCompletions(content, position, publisher, languageName);
+
         if (appContext == null || !VoidPortAutocompleteService.isEnabled(VoidPortSettings.prefs(appContext))) {
             return;
         }
