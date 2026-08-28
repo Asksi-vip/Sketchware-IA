@@ -113,10 +113,6 @@ public class SmartCodeCompletionEngine {
             }
 
             String prefix = lineSequence.subSequence(prefixStart, column).toString();
-            if (prefix.trim().isEmpty()) {
-                return;
-            }
-
             int prefixLength = prefix.length();
             String prefixLower = prefix.toLowerCase(Locale.US);
 
@@ -130,6 +126,31 @@ public class SmartCodeCompletionEngine {
                                ((lang.contains("xml")) ? XML_KEYWORDS : JAVA_KEYWORDS);
             String[] types = (lang.contains("kt") || lang.contains("kotlin")) ? KOTLIN_TYPES :
                             ((lang.contains("xml")) ? new String[0] : JAVA_TYPES);
+
+            // Dot Member Intellisense (e.g. textView., Math., R.id.)
+            int dotIdx = lineSequence.subSequence(0, column).toString().lastIndexOf('.');
+            if (dotIdx >= 0 && dotIdx < column) {
+                String fullLine = content.toString();
+                String beforeDot = lineSequence.subSequence(0, dotIdx).toString().trim();
+                int wordStart = beforeDot.length() - 1;
+                while (wordStart >= 0 && (Character.isJavaIdentifierPart(beforeDot.charAt(wordStart)) || beforeDot.charAt(wordStart) == '.')) {
+                    wordStart--;
+                }
+                String targetSymbol = beforeDot.substring(wordStart + 1).trim();
+                String memberPrefix = lineSequence.subSequence(dotIdx + 1, column).toString().toLowerCase(Locale.US);
+
+                if (!targetSymbol.isEmpty()) {
+                    boolean isStatic = Character.isUpperCase(targetSymbol.charAt(0)) || targetSymbol.startsWith("R.");
+                    String typeName = isStatic ? targetSymbol : CodeIntelligenceEngine.resolveVariableType(fullLine, targetSymbol, lang);
+                    List<String> members = CodeIntelligenceEngine.getTypeMembers(typeName, isStatic);
+
+                    for (String m : members) {
+                        if (m.toLowerCase(Locale.US).startsWith(memberPrefix) && addedCandidates.add(m)) {
+                            items.add(new SmartCompletionItem(m, "Member (" + typeName + ")", memberPrefix.length()));
+                        }
+                    }
+                }
+            }
 
             // 1. Keywords Match
             for (String kw : keywords) {
