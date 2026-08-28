@@ -62,6 +62,7 @@ import pro.sketchware.R;
 import pro.sketchware.activities.chat.port.VoidPortAiAutocompleteLanguage;
 import pro.sketchware.activities.preview.LayoutPreviewActivity;
 import pro.sketchware.databinding.CodeEditorHsBinding;
+import pro.sketchware.utility.CodeFormatAndGenerateHelper;
 import pro.sketchware.utility.CodeNavigationHelper;
 import pro.sketchware.utility.EditorUtils;
 import pro.sketchware.utility.FileUtil;
@@ -427,6 +428,7 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Find & Replace");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Word wrap").setCheckable(true).setChecked(local_pref.getBoolean("act_ww", false));
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Pretty print");
+            toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Generate code");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Select language");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Select theme");
             toolbarMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "Auto complete").setCheckable(true).setChecked(local_pref.getBoolean("act_ac", true));
@@ -448,40 +450,12 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
                         break;
 
                     case "Pretty print":
-                        if (getIntent().hasExtra("java")) {
-                            StringBuilder b = new StringBuilder();
+                    case "Format code":
+                        CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(this, binding.editor, null);
+                        break;
 
-                            for (String line : binding.editor.getText().toString().split("\n")) {
-                                String trims = (line + "X").trim();
-                                trims = trims.substring(0, trims.length() - 1);
-
-                                b.append(trims);
-                                b.append("\n");
-                            }
-
-                            boolean err = false;
-                            String ss = b.toString();
-
-                            try {
-                                ss = Lx.j(ss, true);
-                            } catch (Exception e) {
-                                err = true;
-                                SketchwareUtil.toastError("Your code contains incorrectly nested parentheses");
-                            }
-
-                            if (!err) binding.editor.setText(ss);
-
-                        } else if (getIntent().hasExtra("xml")) {
-                            String format = prettifyXml(binding.editor.getText().toString(), 4, getIntent());
-
-                            if (format != null) {
-                                binding.editor.setText(format);
-                            } else {
-                                SketchwareUtil.toastError("Failed to format XML file", Toast.LENGTH_LONG);
-                            }
-                        } else {
-                            SketchwareUtil.toast("Only Java and XML files can be formatted");
-                        }
+                    case "Generate code":
+                        CodeFormatAndGenerateHelper.showGenerateCodeMenu(this, binding.editor, null);
                         break;
 
                     case "Select language":

@@ -87,23 +87,37 @@ public class CodeNavigationHelper {
     public static void showNavigationMenu(Activity activity, CodeEditor editor, File projectRoot) {
         if (activity == null || editor == null) return;
         String symbol = getSymbolAtCursor(editor);
-        if (symbol.isEmpty()) {
-            Toast.makeText(activity, "Place cursor on a symbol to navigate", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        String formatLabel = editor.hasSelection() ? "🧹 Format Selection" : "🧹 Format Code";
 
-        CharSequence[] options = new CharSequence[]{
+        CharSequence[] options = symbol.isEmpty() ? new CharSequence[]{
+                formatLabel,
+                "⚡ Generate Code..."
+        } : new CharSequence[]{
                 "📍 Go to Definition (" + symbol + ")",
-                "🔎 Find References (" + symbol + ")"
+                "🔎 Find References (" + symbol + ")",
+                formatLabel,
+                "⚡ Generate Code..."
         };
 
         new MaterialAlertDialogBuilder(activity)
-                .setTitle("Code Navigation: " + symbol)
+                .setTitle(symbol.isEmpty() ? "Code Tools" : "Code Tools: " + symbol)
                 .setItems(options, (dialog, which) -> {
-                    if (which == 0) {
-                        goToDefinition(activity, projectRoot, symbol);
-                    } else if (which == 1) {
-                        findReferences(activity, projectRoot, symbol);
+                    if (symbol.isEmpty()) {
+                        if (which == 0) {
+                            CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(activity, editor, null);
+                        } else if (which == 1) {
+                            CodeFormatAndGenerateHelper.showGenerateCodeMenu(activity, editor, null);
+                        }
+                    } else {
+                        if (which == 0) {
+                            goToDefinition(activity, projectRoot, symbol);
+                        } else if (which == 1) {
+                            findReferences(activity, projectRoot, symbol);
+                        } else if (which == 2) {
+                            CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(activity, editor, null);
+                        } else if (which == 3) {
+                            CodeFormatAndGenerateHelper.showGenerateCodeMenu(activity, editor, null);
+                        }
                     }
                 })
                 .setNegativeButton("Cancel", null)

@@ -89,6 +89,7 @@ import pro.sketchware.R;
 import pro.sketchware.databinding.ActivityAndroidStudioProjectBinding;
 import pro.sketchware.databinding.ItemStudioFileTreeBinding;
 import pro.sketchware.util.ProjectPathResolver;
+import pro.sketchware.utility.CodeFormatAndGenerateHelper;
 import pro.sketchware.utility.CodeNavigationHelper;
 import pro.sketchware.utility.EditorUtils;
 import pro.sketchware.utility.FileUtil;
@@ -418,7 +419,7 @@ public class AndroidStudioProjectActivity extends BaseAppCompatActivity {
         setToolbarItem(menu, MENU_UNDO, codeFileVisible, codeFileVisible);
         setToolbarItem(menu, MENU_REDO, codeFileVisible, codeFileVisible);
         setToolbarItem(menu, MENU_SAVE, codeFileVisible, codeFileVisible);
-        setToolbarItem(menu, MENU_FORMAT, codeFileVisible && xmlFile, codeFileVisible && xmlFile);
+        setToolbarItem(menu, MENU_FORMAT, codeFileVisible, codeFileVisible);
         setToolbarItem(menu, MENU_THEME, codeFileVisible, codeFileVisible);
         setToolbarItem(menu, MENU_TEXT_COLOR, layoutXml, layoutXml);
         setToolbarItem(menu, MENU_SEARCH, codeFileVisible, codeFileVisible);
@@ -1610,23 +1611,15 @@ public class AndroidStudioProjectActivity extends BaseAppCompatActivity {
     }
 
     private void formatCurrentFile() {
-        if (currentFile == null) {
+        if (currentFile == null || activeEditor == null) {
             return;
         }
         if (!currentFileEditable) {
             setOutput(getString(R.string.studio_file_not_editable), true);
             return;
         }
-        if (!currentFile.getName().toLowerCase(Locale.US).endsWith(".xml")) {
-            setOutput(getString(R.string.studio_no_xml_preview), true);
-            return;
-        }
         try {
-            String formatted = SrcCodeEditor.prettifyXml(getActiveEditor().getText().toString(), 4, null);
-            if (formatted == null) {
-                throw new IOException("XML formatter returned no result");
-            }
-            getActiveEditor().setText(formatted);
+            CodeFormatAndGenerateHelper.formatCurrentFileOrSelection(this, getActiveEditor(), languageNameFor(currentFile));
             updateStatus(relativePath(currentFile) + " - formatted");
         } catch (Exception e) {
             setOutput(getString(R.string.studio_format_failed) + ": " + e.getMessage(), true);
