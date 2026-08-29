@@ -65,12 +65,20 @@ import pro.sketchware.databinding.CodeEditorHsBinding;
 import pro.sketchware.utility.CodeFormatAndGenerateHelper;
 import pro.sketchware.utility.CodeNavigationHelper;
 import pro.sketchware.utility.ProblemsPanelDialog;
+import pro.sketchware.utility.RealtimeDiagnosticEngine;
 import pro.sketchware.utility.EditorUtils;
 import pro.sketchware.utility.FileUtil;
 import pro.sketchware.utility.SketchwareUtil;
 import pro.sketchware.utility.ThemeUtils;
 import pro.sketchware.utility.UI;
 import pro.sketchware.utility.TranslationFunction;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
+
+import io.github.rosemoe.sora.text.ContentListener;
 
 public class SrcCodeEditor extends BaseAppCompatActivity {
     public static final String FLAG_FROM_ANDROID_MANIFEST = "from_android_manifest";
@@ -89,6 +97,13 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
     private boolean fromAndroidManifest;
     private String scId;
     private String activityName;
+
+    // Real-time diagnostics debounce
+    private final Handler diagnosticsHandler = new Handler(Looper.getMainLooper());
+    private Runnable diagnosticsRunnable;
+    private static final long DIAGNOSTICS_DELAY_MS = 1200;
+    private String currentLanguageName = "java";
+    private File currentProjectFile;
 
     public static void loadCESettings(Context c, CodeEditor ed, String prefix) {
         loadCESettings(c, ed, prefix, false);
@@ -307,16 +322,13 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
 
         String languageName = "java";
         if (title.endsWith(".java")) {
-            binding.editor.setEditorLanguage(new JavaLanguage());
             languageId = 0;
             languageName = "java";
         } else if (title.endsWith(".kt")) {
-            binding.editor.setEditorLanguage(CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_KOTLIN));
             binding.editor.setColorScheme(CodeEditorColorSchemes.loadTextMateColorScheme(CodeEditorColorSchemes.THEME_DRACULA));
             languageId = 1;
             languageName = "kotlin";
         } else if (title.endsWith(".xml")) {
-            binding.editor.setEditorLanguage(CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_XML));
             if (ThemeUtils.isDarkThemeEnabled(getApplicationContext())) {
                 binding.editor.setColorScheme(CodeEditorColorSchemes.loadTextMateColorScheme(CodeEditorColorSchemes.THEME_DRACULA));
             } else {
@@ -325,9 +337,11 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
             languageId = 2;
             languageName = "xml";
         }
-
-        installVoidAiAutocomplete(languageName);
+        currentLanguageName = languageName;
+        currentProjectFile = new File(FileUtil.getExternalStorageDir() + "/.sketchware/data/" + scId);
+        applyLanguageWithAutocomplete(languageName);
         loadCESettings(this, binding.editor, "act", true);
+        setupRealtimeDiagnostics();
         loadToolbar();
 
         binding.editor.setOnLongClickListener(v -> {
@@ -537,6 +551,78 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
             }
         }
         return false;
+    }
+
+    /** Sets the raw Language and immediately wraps it with VoidPortAiAutocompleteLanguage */
+    private void applyLanguageWithAutocomplete(String langName) {
+        io.github.rosemoe.sora.lang.Language rawLang = switch (langName) {
+            case "kotlin" -> CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_KOTLIN);
+            case "xml"    -> CodeEditorLanguages.loadTextMateLanguage(CodeEditorLanguages.SCOPE_NAME_XML);
+            default       -> new JavaLanguage();
+        };
+        binding.editor.setEditorLanguage(
+            VoidPortAiAutocompleteLanguage.wrap(
+                this, scId,
+                getIntent().getStringExtra("content"),
+                langName, rawLang
+            )
+        );
+    }
+
+    /** Installs a debounced ContentListener to run diagnostics after typing stops */
+    private void setupRealtimeDiagnostics() {
+        binding.editor.getText().addContentListener(new ContentListener() {
+            @Override
+            public void beforeReplace(io.github.rosemoe.sora.text.Content content) {}
+
+            @Override
+            public void afterInsert(io.github.rosemoe.sora.text.Content content,
+                                    int startLine, int startColumn,
+                                    int endLine, int endColumn,
+                                    CharSequence insertedContent) {
+                scheduleDiagnostics();
+            }
+
+            @Override
+            public void afterDelete(io.github.rosemoe.sora.text.Content content,
+                                    int startLine, int startColumn,
+                                    int endLine, int endColumn,
+                                    CharSequence deletedContent) {
+                scheduleDiagnostics();
+            }
+
+            @Override
+            public void onFormatFail(Throwable cause) {}
+        });
+    }
+
+    private void scheduleDiagnostics() {
+        if (diagnosticsRunnable != null) {
+            diagnosticsHandler.removeCallbacks(diagnosticsRunnable);
+        }
+        diagnosticsRunnable = () -> {
+            if (binding == null || binding.editor == null) return;
+            String code = binding.editor.getText().toString();
+            String filePath = getIntent().getStringExtra("content");
+            File file = (filePath != null) ? new File(filePath) : null;
+            java.util.List<RealtimeDiagnosticEngine.DiagnosticItem> diagnostics =
+                    RealtimeDiagnosticEngine.analyzeFile(file, code, scId);
+            showInlineErrorBadge(diagnostics);
+        };
+        diagnosticsHandler.postDelayed(diagnosticsRunnable, DIAGNOSTICS_DELAY_MS);
+    }
+
+    /** Show first error/warning as a non-blocking Toast badge (lightweight indicator) */
+    private void showInlineErrorBadge(java.util.List<RealtimeDiagnosticEngine.DiagnosticItem> items) {
+        if (items == null || items.isEmpty()) return;
+        long errors   = items.stream().filter(d -> d.severity == RealtimeDiagnosticEngine.Severity.ERROR).count();
+        long warnings = items.stream().filter(d -> d.severity == RealtimeDiagnosticEngine.Severity.WARNING).count();
+        String badgeText = "";
+        if (errors > 0)   badgeText += "❌ " + errors + " error" + (errors > 1 ? "s" : "");
+        if (warnings > 0) badgeText += (badgeText.isEmpty() ? "" : "  ") + "⚠️ " + warnings + " warning" + (warnings > 1 ? "s" : "");
+        if (!badgeText.isEmpty()) {
+            android.widget.Toast.makeText(this, badgeText + "  (tap Problems menu)", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void installVoidAiAutocomplete(String languageName) {
