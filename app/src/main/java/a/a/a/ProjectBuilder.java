@@ -716,17 +716,68 @@ public class ProjectBuilder {
                 (System.currentTimeMillis() - timestampResourceCompilationStarted) + " ms");
     }
 
+    private File getOrGenerateDexFileForLocalLibrary(File jarOrDexFile) {
+        if (jarOrDexFile == null || !jarOrDexFile.exists()) return null;
+        if (jarOrDexFile.getName().endsWith(".dex")) {
+            return jarOrDexFile;
+        }
+        if (jarOrDexFile.getName().endsWith(".jar")) {
+            File parentDir = jarOrDexFile.getParentFile();
+            if (parentDir != null) {
+                File targetDex = new File(parentDir, "classes.dex");
+                if (targetDex.exists() && targetDex.length() > 0) {
+                    return targetDex;
+                }
+                try {
+                    com.android.tools.r8.D8.run(
+                        com.android.tools.r8.D8Command.builder()
+                            .setMinApiLevel(21)
+                            .setOutput(parentDir.toPath(), com.android.tools.r8.OutputMode.DexIndexed)
+                            .addProgramFiles(jarOrDexFile.toPath())
+                            .build()
+                    );
+                    if (targetDex.exists()) {
+                        return targetDex;
+                    }
+                } catch (Throwable t) {
+                    try {
+                        List<String> args = Arrays.asList(
+                            "--dex",
+                            "--output=" + targetDex.getAbsolutePath(),
+                            jarOrDexFile.getAbsolutePath()
+                        );
+                        Main.clearInternTables();
+                        Main.Arguments arguments = new Main.Arguments();
+                        Method parseMethod = Main.Arguments.class.getDeclaredMethod("parse", String[].class);
+                        parseMethod.setAccessible(true);
+                        parseMethod.invoke(arguments, (Object) args.toArray(new String[0]));
+                        Main.run(arguments);
+                        if (targetDex.exists()) {
+                            return targetDex;
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            }
+        }
+        return null;
+    }
+
     private void addDexFileSafely(ArrayList<File> list, Set<String> addedPaths, File file) {
         if (file != null && file.exists() && file.isFile()) {
-            try {
-                String path = file.getCanonicalPath();
-                if (addedPaths.add(path)) {
-                    list.add(file);
-                }
-            } catch (IOException e) {
-                String path = file.getAbsolutePath();
-                if (addedPaths.add(path)) {
-                    list.add(file);
+            if (!file.getName().endsWith(".dex")) {
+                file = getOrGenerateDexFileForLocalLibrary(file);
+            }
+            if (file != null && file.exists() && file.getName().endsWith(".dex")) {
+                try {
+                    String path = file.getCanonicalPath();
+                    if (addedPaths.add(path)) {
+                        list.add(file);
+                    }
+                } catch (IOException e) {
+                    String path = file.getAbsolutePath();
+                    if (addedPaths.add(path)) {
+                        list.add(file);
+                    }
                 }
             }
         }
