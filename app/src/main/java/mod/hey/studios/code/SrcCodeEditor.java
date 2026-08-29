@@ -590,9 +590,6 @@ public class SrcCodeEditor extends BaseAppCompatActivity {
                                     CharSequence deletedContent) {
                 scheduleDiagnostics();
             }
-
-            @Override
-            public void onFormatFail(Throwable cause) {}
         });
     }
 
